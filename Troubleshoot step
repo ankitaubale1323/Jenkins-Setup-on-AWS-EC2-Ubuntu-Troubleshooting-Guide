@@ -1,0 +1,93 @@
+🚀 Prerequisites
+AWS EC2 Ubuntu instance (22.04 recommended).
+
+SSH access to your EC2 instance.
+
+sudo privileges on the server.
+
+⚙️ Installation Steps
+1️⃣ Update & Install Java (Java 17 Required)
+Jenkins (2.414+) requires Java 17 or higher. At first, Java 11 was installed, which caused this error:
+
+
+
+Running with Java 11 from /usr/lib/jvm/java-11-openjdk-amd64, which is older than the minimum required version (Java 17).
+Fix: Install Java 17
+
+bash
+
+sudo apt update
+sudo apt install openjdk-17-jdk -y
+Verify the version:
+
+bash
+
+java -version
+✅ Should return: openjdk version "17..."
+
+2️⃣ Add Jenkins Repository & Install
+bash
+
+wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/ | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt update
+sudo apt install jenkins -y
+3️⃣ Resolve Directory Permission Issues
+Before starting Jenkins, ensure directories exist and have correct permissions:
+
+bash
+
+sudo mkdir -p /var/log/jenkins /var/lib/jenkins /var/run/jenkins
+sudo chown -R jenkins:jenkins /var/log/jenkins /var/lib/jenkins /var/run/jenkins
+4️⃣ Start Jenkins Service
+Attempt to start Jenkins:
+
+bash
+
+sudo systemctl start jenkins
+If the service fails, check the status:
+
+bash
+
+sudo systemctl status jenkins
+If you see errors like:
+
+sql
+
+Start request repeated too quickly.
+jenkins.service: Failed with result 'exit-code'.
+➡️ Usually this is due to Java version mismatch or missing directories, both fixed by earlier steps.
+
+5️⃣ Manual Jenkins Run (Debugging)
+If the service still fails, manually run Jenkins to check logs:
+
+bash
+
+sudo su - jenkins
+java -jar /usr/share/java/jenkins.war --httpPort=8080
+If Java is still below version 17, install the correct version as shown in Step 1.
+
+6️⃣ Access Jenkins UI
+Open your browser:
+
+cpp
+
+http://<Your-EC2-Public-IP>:8080
+Unlock Jenkins with:
+
+bash
+
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+Paste the password into the Jenkins web interface.
+
+🧠 Common Issues & Fixes
+
+Issue	Solution
+Java 11 detected, Jenkins won't start.	Upgrade to Java 17 (sudo apt install openjdk-17-jdk -y).
+jenkins.service: Failed with result 'exit-code'	Check Java version, directory permissions, logs.
+sudo fails for jenkins user.	Switch back to ubuntu user, perform sudo commands.
+Jenkins web not accessible on :8080.	Check ufw firewall and AWS EC2 security group — allow port 8080.
+🎯 Final Thoughts
+This guide documents a real-world troubleshooting journey during Jenkins installation on Ubuntu.
+Following this ensures your Jenkins instance will run smoothly on AWS.
+
